@@ -1,0 +1,63 @@
+# =========================
+# GENERAL
+# =========================
+node_modules/
+dist/
+build/
+coverage/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+
+# =========================
+# ENV VARIABLES (IMPORTANTE)
+# =========================
+.env
+.env.local
+.env.development
+.env.production
+
+# =========================
+# FRONTEND (VITE / REACT)
+# =========================
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# =========================
+# BACKEND (NESTJS)
+# =========================
+backend/node_modules/
+backend/dist/
+
+# =========================
+# PRISMA
+# =========================
+backend/prisma/migrations/
+backend/prisma/*.db
+backend/prisma/*.db-journal
+
+# =========================
+# ARCHIVOS SENSIBLES
+# =========================
+*.pem
+*.key
+
+# =========================
+# OTROS
+# =========================
+*.zip
+*.tar
+*.rar
