@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model categoria {
+  id_categoria Int        @id @default(autoincrement())
+  nombre       String     @db.VarChar(100)
+  producto     producto[]
+}
+
+model direccion {
+  id_direccion Int      @id @default(autoincrement())
+  fecha        DateTime @default(dbgenerated("CURRENT_DATE")) @db.Date
+  lugar        String   @db.VarChar(255)
+  id_usuario   Int
+  usuario      usuario  @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade, onUpdate: NoAction, map: "fk_direccion_usuario")
+  pedido       pedido[]
+}
+
+model foto_producto {
+  id_foto     Int      @id @default(autoincrement())
+  url         String   @db.VarChar(255)
+  id_producto Int
+  producto    producto @relation(fields: [id_producto], references: [id_producto], onDelete: Cascade, onUpdate: NoAction, map: "fk_foto_producto")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pedido {
+  id_pedido       Int               @id @default(autoincrement())
+  id_usuario      Int
+  id_direccion    Int
+  total           Decimal           @db.Decimal(10, 2)
+  fecha           DateTime          @default(now()) @db.Timestamp(6)
+  direccion       direccion         @relation(fields: [id_direccion], references: [id_direccion], onUpdate: NoAction, map: "fk_pedido_direccion")
+  usuario         usuario           @relation(fields: [id_usuario], references: [id_usuario], onUpdate: NoAction, map: "fk_pedido_usuario")
+  pedido_producto pedido_producto[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model pedido_producto {
+  id_detalleped   Int      @id @default(autoincrement())
+  id_pedido       Int
+  id_producto     Int
+  cantidad        Int
+  nota            String?  @db.VarChar(255)
+  precio_unitario Decimal  @db.Decimal(10, 2)
+  pedido          pedido   @relation(fields: [id_pedido], references: [id_pedido], onDelete: Cascade, onUpdate: NoAction, map: "fk_detalle_pedido")
+  producto        producto @relation(fields: [id_producto], references: [id_producto], onUpdate: NoAction, map: "fk_detalle_producto")
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model producto {
+  id_producto     Int               @id @default(autoincrement())
+  nombre          String            @db.VarChar(150)
+  precio          Decimal           @db.Decimal(10, 2)
+  descripcion     String?
+  id_categoria    Int
+  foto_producto   foto_producto[]
+  pedido_producto pedido_producto[]
+  categoria       categoria         @relation(fields: [id_categoria], references: [id_categoria], onUpdate: NoAction, map: "fk_producto_categoria")
+}
+
+model usuario {
+  id_usuario Int         @id @default(autoincrement())
+  nombre     String      @db.VarChar(100)
+  password   String      @db.VarChar(255)
+  correo     String      @unique @db.VarChar(150)
+  foto       String?     @db.VarChar(255)
+  telefono   String?     @db.VarChar(20)
+  direccion  direccion[]
+  pedido     pedido[]
+}
