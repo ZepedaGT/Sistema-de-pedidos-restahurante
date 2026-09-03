@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -77,6 +78,12 @@ export class ProductosController {
     @Body() createProductoDto: ProductoCrearDto,
     @UploadedFile() foto?: Express.Multer.File,
   ): Promise<ProductoResponseDto> {
+    if (!foto) {
+      throw new BadRequestException(
+        'La foto del producto es obligatoria',
+      );
+    }
+
     return this.productosService.crearProducto(
       createProductoDto,
       foto,

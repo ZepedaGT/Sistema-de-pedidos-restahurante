@@ -20,10 +20,11 @@ export class ProductosService {
     foto?: Express.Multer.File,
   ): Promise<ProductoResponseDto> {
     if (!foto) {
-      throw new BadRequestException('La foto del producto es obligatoria');
+      throw new BadRequestException(
+        'La foto del producto es obligatoria',
+      );
     }
 
-    // Verificar que la categoría exista
     const categoria = await this.prisma.categoria.findUnique({
       where: {
         id_categoria: createProductoDto.id_categoria,
@@ -36,10 +37,8 @@ export class ProductosService {
       );
     }
 
-    // Nombre único para la imagen
     const nombreArchivo = `${Date.now()}-${foto.originalname}`;
 
-    // Ruta donde se guardará la imagen
     const ruta = join(
       process.cwd(),
       'uploads',
@@ -47,13 +46,10 @@ export class ProductosService {
       nombreArchivo,
     );
 
-    // Guardar imagen
     await writeFile(ruta, foto.buffer);
 
-    // URL que se guardará en la base de datos
     const urlFoto = `/uploads/productos/${nombreArchivo}`;
 
-    // Crear producto y foto
     const producto = await this.prisma.producto.create({
       data: {
         nombre: createProductoDto.nombre,
