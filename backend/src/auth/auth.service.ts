@@ -24,9 +24,15 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  private normalizarCorreo(correo: string) {
+    return correo.trim().toLowerCase();
+  }
+
   async register(dto: RegisterDto) {
+    const correo = this.normalizarCorreo(dto.correo);
+
     const usuarioExistente = await this.prisma.usuario.findUnique({
-      where: { correo: dto.correo },
+      where: { correo },
     });
 
     if (usuarioExistente) {
@@ -37,8 +43,8 @@ export class AuthService {
 
     const usuario = await this.prisma.usuario.create({
       data: {
-        nombre: dto.nombre,
-        correo: dto.correo,
+        nombre: dto.nombre.trim(),
+        correo,
         password: passwordHasheado,
         telefono: dto.telefono,
         foto: dto.foto,
@@ -48,15 +54,12 @@ export class AuthService {
 
     const token = await this.generarToken(usuario.id_usuario, usuario.correo);
 
-    return {
-      usuario,
-      ...token,
-    };
+    return { usuario, ...token };
   }
 
   async login(dto: LoginDto) {
     const usuario = await this.prisma.usuario.findUnique({
-      where: { correo: dto.correo },
+      where: { correo: this.normalizarCorreo(dto.correo) },
     });
 
     if (!usuario) {
@@ -71,15 +74,11 @@ export class AuthService {
 
     const token = await this.generarToken(usuario.id_usuario, usuario.correo);
 
-    const usuarioSinPassword = await this.prisma.usuario.findUnique({
-      where: { id_usuario: usuario.id_usuario },
-      select: USUARIO_SELECT,
-    });
+    // Quitamos el password sin hacer otra consulta
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password, ...usuarioSinPassword } = usuario;
 
-    return {
-      usuario: usuarioSinPassword,
-      ...token,
-    };
+    return { usuario: usuarioSinPassword, ...token };
   }
 
   async validarUsuario(id_usuario: number) {
