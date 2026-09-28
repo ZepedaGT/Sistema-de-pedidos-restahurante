@@ -3,8 +3,28 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("DATABASE_URL")
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum rol_usuario {
+  CLIENTE
+  ADMIN
+}
+
+enum estado_pedido {
+  PENDIENTE
+  CONFIRMADO
+  EN_PREPARACION
+  EN_CAMINO
+  ENTREGADO
+  CANCELADO
+}
+
+enum tipo_entrega {
+  DOMICILIO
+  RECOGER
 }
 
 model categoria {
@@ -29,19 +49,33 @@ model foto_producto {
   producto    producto @relation(fields: [id_producto], references: [id_producto], onDelete: Cascade, onUpdate: NoAction, map: "fk_foto_producto")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model pedido {
-  id_pedido       Int               @id @default(autoincrement())
-  id_usuario      Int
-  id_direccion    Int
-  total           Decimal           @db.Decimal(10, 2)
-  fecha           DateTime          @default(now()) @db.Timestamp(6)
-  direccion       direccion         @relation(fields: [id_direccion], references: [id_direccion], onUpdate: NoAction, map: "fk_pedido_direccion")
-  usuario         usuario           @relation(fields: [id_usuario], references: [id_usuario], onUpdate: NoAction, map: "fk_pedido_usuario")
-  pedido_producto pedido_producto[]
+  id_pedido          Int               @id @default(autoincrement())
+  codigo_seguimiento String            @unique @default(uuid()) @db.VarChar(36)
+
+  id_usuario         Int?
+  id_direccion       Int?
+
+  nombre_cliente     String            @db.VarChar(100)
+  telefono_cliente   String            @db.VarChar(20)
+  correo_cliente     String?           @db.VarChar(150)
+
+  tipo_entrega       tipo_entrega      @default(DOMICILIO)
+  direccion_entrega  String?           @db.VarChar(255)
+  notas              String?           @db.VarChar(255)
+
+  estado             estado_pedido     @default(PENDIENTE)
+  total              Decimal           @db.Decimal(10, 2)
+  fecha              DateTime          @default(now()) @db.Timestamp(6)
+
+  direccion          direccion?        @relation(fields: [id_direccion], references: [id_direccion], onDelete: SetNull, onUpdate: NoAction, map: "fk_pedido_direccion")
+  usuario            usuario?          @relation(fields: [id_usuario], references: [id_usuario], onDelete: SetNull, onUpdate: NoAction, map: "fk_pedido_usuario")
+  pedido_producto    pedido_producto[]
+
+  @@index([id_usuario])
+  @@index([estado])
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model pedido_producto {
   id_detalleped   Int      @id @default(autoincrement())
   id_pedido       Int
@@ -53,13 +87,13 @@ model pedido_producto {
   producto        producto @relation(fields: [id_producto], references: [id_producto], onUpdate: NoAction, map: "fk_detalle_producto")
 }
 
-/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
 model producto {
   id_producto     Int               @id @default(autoincrement())
   nombre          String            @db.VarChar(150)
   precio          Decimal           @db.Decimal(10, 2)
   descripcion     String?
   id_categoria    Int
+    activo          Boolean           @default(true)
   foto_producto   foto_producto[]
   pedido_producto pedido_producto[]
   categoria       categoria         @relation(fields: [id_categoria], references: [id_categoria], onUpdate: NoAction, map: "fk_producto_categoria")
@@ -72,6 +106,7 @@ model usuario {
   correo     String      @unique @db.VarChar(150)
   foto       String?     @db.VarChar(255)
   telefono   String?     @db.VarChar(20)
+    rol        rol_usuario @default(CLIENTE)
   direccion  direccion[]
   pedido     pedido[]
 }
